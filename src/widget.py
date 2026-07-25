@@ -21,6 +21,12 @@ def mask_account_card(card_number_and_type: str) -> str:
     if not number.isdigit():
         raise ValueError("Номер должен состоять только из цифр.")
 
+    if name == "Счет" and len(number) != 20:
+        raise ValueError("Номер счета должен содержать 20 цифр.")
+
+    if name != "Счет" and len(number) != 16:
+        raise ValueError("Номер карты должен содержать 16 цифр.")
+
     if name == "Счет":
         return name + " " + get_mask_account(number)
     else:
