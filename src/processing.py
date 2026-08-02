@@ -6,3 +6,12 @@ def filter_by_state(list_of_dicts: list[dict[str, object]], state: str = "EXECUT
             filtered_dicts.append(operation)
 
     return filtered_dicts
+
+
+def sort_by_date(list_of_dicts: list[dict[str, object]], reverse: bool = True) -> list[dict[str, object]]:
+    sorted_dicts = sorted(
+        list_of_dicts,
+        key=lambda operation: str(operation["date"]),
+        reverse=reverse,
+    )
+    return sorted_dicts
