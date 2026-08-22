@@ -1,20 +1,27 @@
 import time
+from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
+from pathlib import Path
+from typing import ParamSpec, TypeVar
 
-def log(filename=None):
+P = ParamSpec("P")
+R = TypeVar("R")
 
-    def write_log_choice(message):
+
+def log(filename: str | Path | None = None) -> Callable[[Callable[P, R]], Callable[P, R]]:
+
+    def write_log_choice(message: str) -> None:
         if filename:
-            with open(filename, 'a', encoding="utf-8") as f:
+            with open(filename, "a", encoding="utf-8") as f:
                 f.write(f"{message}\n")
         else:
             print(f"{message}")
 
-    def wrapper(func):
+    def wrapper(func: Callable[P, R]) -> Callable[P, R]:
 
         @wraps(func)
-        def inner(*args, **kwargs):
+        def inner(*args: P.args, **kwargs: P.kwargs) -> R:
             write_log_choice(f"{func.__name__} начала работу в {datetime.now()}")
 
             start_time = time.perf_counter()
@@ -28,7 +35,9 @@ def log(filename=None):
             finally:
                 execution_time = time.perf_counter() - start_time
 
-                write_log_choice(f"{func.__name__} с аргументами {args} и {kwargs} завершила работу в {datetime.now()}")
+                write_log_choice(
+                    f"{func.__name__} с аргументами {args} и {kwargs} завершила работу в {datetime.now()}"
+                )
                 write_log_choice(f"Время выполнения: {execution_time:.6f} сек.")
 
             return result
@@ -36,4 +45,3 @@ def log(filename=None):
         return inner
 
     return wrapper
-
