@@ -10,8 +10,14 @@ R = TypeVar("R")
 
 
 def log(filename: str | Path | None = None) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """Создать декоратор для логирования выполнения функции.
+
+    Если ``filename`` указан, сообщения дописываются в этот файл. В противном
+    случае они выводятся в консоль.
+    """
 
     def write_log_choice(message: str) -> None:
+        """Записать сообщение в выбранный файл или вывести его в консоль."""
         if filename:
             with open(filename, "a", encoding="utf-8") as f:
                 f.write(f"{message}\n")
@@ -19,9 +25,11 @@ def log(filename: str | Path | None = None) -> Callable[[Callable[P, R]], Callab
             print(f"{message}")
 
     def wrapper(func: Callable[P, R]) -> Callable[P, R]:
+        """Обернуть переданную функцию логированием."""
 
         @wraps(func)
         def inner(*args: P.args, **kwargs: P.kwargs) -> R:
+            """Выполнить функцию и зарегистрировать результат или ошибку."""
             write_log_choice(f"{func.__name__} начала работу в {datetime.now()}")
 
             start_time = time.perf_counter()
