@@ -26,28 +26,41 @@ def test_read_json_file() -> None:
         },
     ]
 
-    with patch("src.utils.open", mock_open(read_data=json.dumps(data))):
+    with (
+        patch("src.utils.open", mock_open(read_data=json.dumps(data))),
+        patch("src.utils.logger.info") as mocked_info,
+    ):
         result = read_json_file("data/operations.json")
 
     assert result == data
+    mocked_info.assert_called_once()
 
 
 def test_read_json_missing_file(tmp_path: Path) -> None:
     missing_file = tmp_path / "missing.json"
 
-    result = read_json_file(missing_file)
+    with patch("src.utils.logger.error") as mocked_error:
+        result = read_json_file(missing_file)
+
     assert result == []
+    mocked_error.assert_called_once()
 
 
 def test_read_json_file_empty(tmp_path: Path) -> None:
     empty_file = tmp_path / "empty.json"
     empty_file.write_text("", encoding="utf-8")
-    result = read_json_file(empty_file)
+    with patch("src.utils.logger.error") as mocked_error:
+        result = read_json_file(empty_file)
+
     assert result == []
+    mocked_error.assert_called_once()
 
 
 def test_read_json_file_wrong_type(tmp_path: Path) -> None:
     wrong_type = tmp_path / "wrong_type.json"
     wrong_type.write_text(json.dumps({"key": "value"}), encoding="utf-8")
-    result = read_json_file(wrong_type)
+    with patch("src.utils.logger.error") as mocked_error:
+        result = read_json_file(wrong_type)
+
     assert result == []
+    mocked_error.assert_called_once()
