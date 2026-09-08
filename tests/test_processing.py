@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.processing import filter_by_state, sort_by_date
+from src.processing import filter_by_state, process_bank_operations, process_bank_search, sort_by_date
 
 
 def test_filter_by_state_default(operations: list[dict[str, object]]) -> None:
@@ -100,3 +100,43 @@ def test_sort_by_date_without_date() -> None:
 def test_sort_by_date_empty_list() -> None:
     """Проверить сортировку пустого списка."""
     assert sort_by_date([]) == []
+
+
+@pytest.mark.parametrize(
+    ("search", "expected_ids"),
+    [
+        ("организации", [939719570, 594226727]),
+        ("^Перевод со счета", [142264268, 873106923]),
+        ("перевод", []),
+        ("Открытие вклада", []),
+    ],
+)
+def test_process_bank_search(transactions: list[dict[str, object]], search: str, expected_ids: list[int]) -> None:
+    """Проверить поиск операций по описанию и регулярному выражению."""
+    result = process_bank_search(transactions, search)
+
+    assert [transaction["id"] for transaction in result] == expected_ids
+
+
+def test_process_bank_search_without_description() -> None:
+    """Операция без описания не попадает в результат поиска."""
+    assert process_bank_search([{"id": 1}], "Перевод") == []
+
+
+@pytest.mark.parametrize(
+    ("categories", "expected"),
+    [
+        (
+            ["Перевод организации", "Перевод со счета на счет"],
+            {"Перевод организации": 2, "Перевод со счета на счет": 2},
+        ),
+        (["Перевод с карты на карту"], {"Перевод с карты на карту": 1}),
+        (["Открытие вклада"], {}),
+        ([], {}),
+    ],
+)
+def test_process_bank_operations(
+    transactions: list[dict[str, object]], categories: list[str], expected: dict[str, int]
+) -> None:
+    """Проверить подсчёт операций по переданным категориям."""
+    assert process_bank_operations(transactions, categories) == expected
